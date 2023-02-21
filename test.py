@@ -20,7 +20,7 @@ async def start(event):
     sender = await event.get_sender()
     SENDER = sender.id
     text = "Benvenuto nel bot di compravendita di libri usati\nPer aggiungere un libro in vendita utilizza il comando /insert seguito da NOME, AUTORE, PREZZO, STATO, CITTA'.\nESEMPIO: /instert la Bibbia, Gesu' Cristo, 15.99 euro, come nuovo, Gerusalemme"
-    text2 = "Per cercare un libro puoi usare /searchbyname seguito dal nome del libro o /searchbyauthor seguito dal nome dell'autore\nESEMPIO: /searchbyname la Bibbia | /searchbyauthor Gesu' Cristo"
+    text2 = "Per cercare un libro puoi usare /searchbyname seguito dal nome del libro o /searchbyauthor seguito dal nome dell'autore\nESEMPIO: /searchbyname la Bibbia\nESEMPIO: /searchbyauthor Gesu' Cristo"
     text3 = "Per vedere la lista dei tuoi libri messi in vendita usa /showmybooks e per cancellare un libro dalla lista usa /delete seguito dall'id numerico del libro.\nESEMPIO: /delete 33"
 
     await client.send_message(SENDER, text, parse_mode='html')
