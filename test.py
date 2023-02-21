@@ -212,6 +212,44 @@ async def search_by_name(event):
         return
 
 
+######
+###### SEARCH BY AUTHOR COMMAND
+######
+
+@client.on(events.NewMessage(pattern="^/searchbyauthor"))
+async def search_by_name(event):
+    try:
+        # Get the sender
+        sender = await event.get_sender()
+        SENDER = sender.id
+
+        # get list of words inserted by the user
+        list_of_words = event.message.text.split(" ")
+        book_author = " ".join(list_of_words[1:])  # Join all the words from the list except the command name
+
+        # Create the SELECT query
+        sql_command = "SELECT * FROM orders WHERE LOWER(book_author) LIKE LOWER('%{}%')".format(book_author)
+        # Execute the query
+        crsr.execute(sql_command)
+        result = crsr.fetchall()
+
+        # If no result is found, we send a message to inform the user
+        if not result:
+            text = "No book found with the name '{}'. Please try again with a different name.".format(book_author)
+            await client.send_message(SENDER, text, parse_mode='html')
+        else:
+            # Build the message to send to the user with all the books information
+            text = "Books found with the name '{}':\n".format(book_author)
+            for row in result:
+                text += "Name: {}\nAuthor: {}\nPrice: {}\nStatus: {}\nLocation: {}\nDate of upload: {}\n\n".format(row[1], row[2], row[3], row[4], row[5], row[7])
+
+            await client.send_message(SENDER, text, parse_mode='html')
+
+    except Exception as e: 
+        print(e)
+        await client.send_message(SENDER, "<b>Conversation Terminated✔️</b>", parse_mode='html')
+        return
+
 
 ########################################################################################################
 ##### MAIN
