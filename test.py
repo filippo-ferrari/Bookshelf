@@ -157,6 +157,61 @@ async def delete(event):
         print(e)
         await client.send_message(SENDER, "<b>Conversation Terminated✔️</b>", parse_mode='html')
         return
+    
+
+
+######
+###### DELETE COMMAND
+######
+
+#create a function that searches a book by name
+def search_book_by_name(book_name):
+    sql_command = "SELECT * FROM orders WHERE name = ?;"
+    crsr.execute(sql_command, (book_name,))
+    rows = crsr.fetchall
+    return rows
+
+
+######
+###### SEARCH BY NAME COMMAND
+######
+
+@client.on(events.NewMessage(pattern="^/searchbyname"))
+async def search_by_name(event):
+    try:
+        # Get the sender
+        sender = await event.get_sender()
+        SENDER = sender.id
+
+        # get list of words inserted by the user
+        list_of_words = event.message.text.split(" ")
+        book_name = " ".join(list_of_words[1:])  # Join all the words from the list except the command name
+
+        # Create the SELECT query
+        sql_command = "SELECT * FROM orders WHERE LOWER(book_name) LIKE LOWER('%{}%')".format(book_name)
+
+        # Execute the query
+        crsr.execute(sql_command)
+        result = crsr.fetchall()
+
+        # If no result is found, we send a message to inform the user
+        if not result:
+            text = "No book found with the name '{}'. Please try again with a different name.".format(book_name)
+            await client.send_message(SENDER, text, parse_mode='html')
+        else:
+            # Build the message to send to the user with all the books information
+            text = "Books found with the name '{}':\n".format(book_name)
+            for row in result:
+                text += "Name: {}\nAuthor: {}\nPrice: {}\nStatus: {}\nLocation: {}\nDate of upload: {}\n\n".format(row[1], row[2], row[3], row[4], row[5], row[7])
+
+            await client.send_message(SENDER, text, parse_mode='html')
+
+    except Exception as e: 
+        print(e)
+        await client.send_message(SENDER, "<b>Conversation Terminated✔️</b>", parse_mode='html')
+        return
+
+
 
 ########################################################################################################
 ##### MAIN
