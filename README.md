@@ -2,6 +2,8 @@
 /insert command working
 /showmybooks command working, testing with different user ID needed
 /delete command working, bugtesting needed in case of wrong input
+/searchbyauthor command working, bugtesting needed
+/searchbyname command working, bugtesting needed
 
 
 TO DO
