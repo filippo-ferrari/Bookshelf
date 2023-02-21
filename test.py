@@ -126,6 +126,9 @@ async def select(event):
 ###### DELETE COMMAND
 ######
 
+## /delete x     where "x" is the id of the book, no other values needed
+## BUGTESTING STILL REQUIRED FOR FIELD INPUT ##
+
 @client.on(events.NewMessage(pattern="(?i)/delete"))
 async def delete(event):
     try:
