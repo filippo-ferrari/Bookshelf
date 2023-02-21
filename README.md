@@ -7,7 +7,7 @@
 
 
 TO DO
-/search command, potentially /searchbyauthor and /searchbyname
+(/search command, potentially /searchbyauthor and /searchbyname) DONE?
 /update command
 /iwanttobuythat command, when you want to buy a book
 logic to put two users in contact
