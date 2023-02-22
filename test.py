@@ -2,6 +2,8 @@ import configparser
 from telethon import TelegramClient, events
 import sqlite3
 from datetime import datetime
+from telethon.tl.types import InputPeerUser
+from telethon.tl import functions, types
 
 print("Initializing configurations...")
 
@@ -206,7 +208,7 @@ async def search_by_name(event):
             # Build the message to send to the user with all the books information
             text = "Books found with the name '{}':\n".format(book_name)
             for row in result:
-                text += "Name: {}\nAuthor: {}\nPrice: {}\nStatus: {}\nLocation: {}\nDate of upload: {}\n\n".format(row[1], row[2], row[3], row[4], row[5], row[7])
+                text += "BOOK ID: {}\nName: {}\nAuthor: {}\nPrice: {}\nStatus: {}\nLocation: {}\nDate of upload: {}\n\n".format(row[0],row[1], row[2], row[3], row[4], row[5], row[7])
 
             await client.send_message(SENDER, text, parse_mode='html')
 
@@ -245,7 +247,7 @@ async def search_by_name(event):
             # Build the message to send to the user with all the books information
             text = "Books found with the name '{}':\n".format(book_author)
             for row in result:
-                text += "Name: {}\nAuthor: {}\nPrice: {}\nStatus: {}\nLocation: {}\nDate of upload: {}\n\n".format(row[1], row[2], row[3], row[4], row[5], row[7])
+                text += "BOOK ID: {}\nName: {}\nAuthor: {}\nPrice: {}\nStatus: {}\nLocation: {}\nDate of upload: {}\n\n".format(row[0],row[1], row[2], row[3], row[4], row[5], row[7])
 
             await client.send_message(SENDER, text, parse_mode='html')
 
@@ -253,6 +255,63 @@ async def search_by_name(event):
         print(e)
         await client.send_message(SENDER, "<b>Conversation Terminated✔️</b>", parse_mode='html')
         return
+    
+######
+###### BUY THIS BOOK COMMAND
+######
+
+@client.on(events.NewMessage(pattern="(?i)/buythisbook"))
+async def select(event):
+    try:
+        ## Get the sender
+        sender = await event.get_sender()
+        buyer_id = sender.id
+        #buyer_hash = await client.get_input_entity(buyer_id)    DO I EVEN?
+
+        # get list of words inserted by the user
+        list_of_words = event.message.text.split(" ")
+        id = list_of_words[1] # The second (1) element is the id
+
+        # Execute the query and get all (*) the oders
+        crsr.execute("SELECT * FROM orders WHERE id = ?", (id,)) 
+        res = crsr.fetchall()
+        
+        if not res:
+            text = "No books found with that ID, check again please.\nYou need the BOOK ID value (example: /buythis book *BOOK ID*)"
+            await client.send_message(buyer_id, text, parse_mode='html')
+            return
+        
+
+        else:
+            seller_id = res[0][6]
+            print(seller_id)
+            print('FETCH SUCCESSFUL, BOOK RETRIEVED')
+
+            buyer_hash = await client.get_input_entity(buyer_id)  ##  get the hash
+            seller_hash = await client.get_input_entity(seller_id) # get the hash
+            actual_buyer = types.InputPeerUser(buyer_id, buyer_hash)
+            actual_seller = types.InputPeerUser(seller_id, seller_hash)
+            # Create the the private chat with seller and buyer
+            result = await client.invoke(
+                functions.messages.CreateChatRequest(
+                users=[actual_buyer, actual_seller],
+                title='Private Chat'
+                )
+            )
+
+            chat_id = result.chats[0].id
+
+            await client.send_message(chat_id, 'TEST')
+
+
+
+
+    except Exception as e:
+        print(e)
+        await client.send_message(buyer_id, "<b>Conversation Terminated✔</b>", parse_mode='html')
+        return
+
+
 
 
 ########################################################################################################
