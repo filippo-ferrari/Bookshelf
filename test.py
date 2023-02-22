@@ -289,9 +289,9 @@ async def select(event):
 
             buyer_hash = await client.get_input_entity(buyer_id)  ##  get the hash
             seller_hash = await client.get_input_entity(seller_id) # get the hash
-            actual_buyer = types.InputPeerUser(buyer_id, buyer_hash)
-            actual_seller = types.InputPeerUser(seller_id, seller_hash)
-            # Create the the private chat with seller and buyer
+            actual_buyer = InputPeerUser(buyer_id, buyer_hash)
+            actual_seller = InputPeerUser(seller_id, seller_hash)
+                        # Create the the private chat with seller and buyer
             result = await client.invoke(
                 functions.messages.CreateChatRequest(
                 users=[actual_buyer, actual_seller],
