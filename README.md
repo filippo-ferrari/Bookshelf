@@ -22,3 +22,4 @@ To use the bot, search for "@booktest_bot" on Telegram.
 - `Category` field, either we let the seller add that or we can retrieve this information from the GoogleBooks API.
 - It might be useful to use regex syntax to compare the name inserted by the seller with GoogleBooks, in order to minimize typos. Something like 'Do you mean ###?'
 - should we get the API from GoogleBook to add the cover image to the query ouput?
+- For the `condition status` field I would go with 'used','good','likenew'
