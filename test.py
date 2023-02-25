@@ -4,6 +4,8 @@ import sqlite3
 from datetime import datetime
 from telethon.tl.types import InputPeerUser
 from telethon.tl import functions, types
+from telethon.sync import TelegramClient, events, functions, types
+from telethon.tl.functions.users import GetFullUserRequest
 
 print("Initializing configurations...")
 
@@ -284,32 +286,28 @@ async def select(event):
 
         else:
             seller_id = res[0][6]
-            print(seller_id)
             print('FETCH SUCCESSFUL, BOOK RETRIEVED')
-
-            buyer_hash = await client.get_input_entity(buyer_id)  ##  get the hash
-            seller_hash = await client.get_input_entity(seller_id) # get the hash
-            actual_buyer = InputPeerUser(buyer_id, buyer_hash)
-            actual_seller = InputPeerUser(seller_id, seller_hash)
-                        # Create the the private chat with seller and buyer
-            result = await client.invoke(
-                functions.messages.CreateChatRequest(
-                users=[actual_buyer, actual_seller],
-                title='Private Chat'
-                )
-            )
-
-            chat_id = result.chats[0].id
-
-            await client.send_message(chat_id, 'TEST')
-
-
-
+            print(seller_id)
+            message = await client.send_message(int(seller_id), 'Un utente e interessato ad un tuo libro.')
+            await client.pin_message(int(seller_id), message, notify=True)
+            message2 = await client.send_message(int(buyer_id), 'Abbiamo notificato il venditore della tua richiesta')
+            await client.pin_message(int(buyer_id), message2, notify=True)
 
     except Exception as e:
         print(e)
         await client.send_message(buyer_id, "<b>Conversation Terminated✔</b>", parse_mode='html')
         return
+
+
+@client.on(events.NewMessage(pattern="(?i)/test"))
+async def test(event):
+    try:
+        sender = await event.get_sender()
+        user_id = sender.id
+        message = await client.send_message(user_id, 'TEST')
+        await client.pin_message(user_id, message, notify=True)
+    except Exception as e:
+        print(e)
 
 
 
