@@ -167,11 +167,6 @@ async def delete(event):
         return
     
 
-
-######
-###### DELETE COMMAND
-######
-
 #create a function that searches a book by name
 def search_book_by_name(book_name):
     sql_command = "SELECT * FROM orders WHERE name = ?;"
@@ -286,17 +281,29 @@ async def select(event):
 
         else:
             seller_id = res[0][6]
-            print('FETCH SUCCESSFUL, BOOK RETRIEVED')
-            print(seller_id)
-            message = await client.send_message(int(seller_id), 'Un utente e interessato ad un tuo libro.')
+            print('FETCH SUCCESSFUL, BOOK RETRIEVED') #testing only
+            print(seller_id) #testing only
+            # fetch user objects for buyer and seller
+            buyer = await client.get_entity(int(buyer_id))
+            seller = await client.get_entity(int(seller_id))
+            book_info_seller = f"Un utente e interessato ad un tuo libro.\n\nID del libro: {res[0][0]}\nBook Title: {res[0][1]}\nAuthor: {res[0][2]}\nPrice: {res[0][3]}\nStatus: {res[0][4]}\nLocation: {res[0][5]}\nDate: {res[0][7]}\n\nContatta l'utente:\nNome: {buyer.first_name}\nCognome: {buyer.last_name}\nUsername: {buyer.username}\nID: {buyer.id}"
+            book_info_buyer = f"Abbiamo notificato il venditore del tuo interesse per un suo libro.\nDi seguito trovi i dati del libro\n\nBook Title: {res[0][1]}\nAuthor: {res[0][2]}\nPrice: {res[0][3]}\nStatus: {res[0][4]}\nLocation: {res[0][5]}\nDate: {res[0][7]}\n\nRicordati di chiedere tutte le informazioni che ritieni necessarie al venditore (tipologia di spedizione, consegna a mano, foto del libro etc.)\n\nInfo sul venditore:\nNome: {seller.first_name}\nCognome: {seller.last_name}\nUsername: {seller.username}\nID: {seller.id}"
+            
+
+            message = await client.send_message(int(seller_id), book_info_seller)
             await client.pin_message(int(seller_id), message, notify=True)
-            message2 = await client.send_message(int(buyer_id), 'Abbiamo notificato il venditore della tua richiesta')
+            message2 = await client.send_message(int(buyer_id), book_info_buyer)
             await client.pin_message(int(buyer_id), message2, notify=True)
 
     except Exception as e:
         print(e)
         await client.send_message(buyer_id, "<b>Conversation Terminated✔</b>", parse_mode='html')
         return
+
+
+###
+### TEST COMMAND, for test only, remove afterwards
+### 
 
 
 @client.on(events.NewMessage(pattern="(?i)/test"))
