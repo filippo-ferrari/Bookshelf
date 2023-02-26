@@ -1,11 +1,14 @@
-import configparser
-from telethon import TelegramClient, events
+import configparser    #this will be needed on final release to parse the id hash and token from a config.ini file
+import telegram 
+from telethon import TelegramClient, events, Button
 import sqlite3
 from datetime import datetime
 from telethon.tl.types import InputPeerUser
 from telethon.tl import functions, types
 from telethon.sync import TelegramClient, events, functions, types
 from telethon.tl.functions.users import GetFullUserRequest
+
+
 
 print("Initializing configurations...")
 
@@ -274,7 +277,7 @@ async def select(event):
         res = crsr.fetchall()
         
         if not res:
-            text = "No books found with that ID, check again please.\nYou need the BOOK ID value (example: /buythis book *BOOK ID*)"
+            text = "No books found with that ID, check again please.\nYou need the BOOK ID value (example: /buythisbook *BOOK ID*)"
             await client.send_message(buyer_id, text, parse_mode='html')
             return
         
@@ -286,14 +289,22 @@ async def select(event):
             # fetch user objects for buyer and seller
             buyer = await client.get_entity(int(buyer_id))
             seller = await client.get_entity(int(seller_id))
-            book_info_seller = f"Un utente e interessato ad un tuo libro.\n\nID del libro: {res[0][0]}\nBook Title: {res[0][1]}\nAuthor: {res[0][2]}\nPrice: {res[0][3]}\nStatus: {res[0][4]}\nLocation: {res[0][5]}\nDate: {res[0][7]}\n\nContatta l'utente:\nNome: {buyer.first_name}\nCognome: {buyer.last_name}\nUsername: {buyer.username}\nID: {buyer.id}"
-            book_info_buyer = f"Abbiamo notificato il venditore del tuo interesse per un suo libro.\nDi seguito trovi i dati del libro\n\nBook Title: {res[0][1]}\nAuthor: {res[0][2]}\nPrice: {res[0][3]}\nStatus: {res[0][4]}\nLocation: {res[0][5]}\nDate: {res[0][7]}\n\nRicordati di chiedere tutte le informazioni che ritieni necessarie al venditore (tipologia di spedizione, consegna a mano, foto del libro etc.)\n\nInfo sul venditore:\nNome: {seller.first_name}\nCognome: {seller.last_name}\nUsername: {seller.username}\nID: {seller.id}"
+            book_info_seller = f"Un utente e interessato ad un tuo libro.\n\nID del libro: {res[0][0]}\nBook Title: {res[0][1]}\nAuthor: {res[0][2]}\nPrice: {res[0][3]}\nStatus: {res[0][4]}\nLocation: {res[0][5]}\nDate: {res[0][7]}\n\nContatta l'utente:\nNome: {buyer.first_name}\nCognome: {buyer.last_name}\nUsername: {buyer.username}\nID: {buyer.id}\nTEST_LINK: https://t.me/{buyer.username} "    #LINK: https://t.me/{buyer.username}
+            book_info_buyer = f"Abbiamo notificato il venditore del tuo interesse per un suo libro.\nDi seguito trovi i dati del libro\n\nBook Title: {res[0][1]}\nAuthor: {res[0][2]}\nPrice: {res[0][3]}\nStatus: {res[0][4]}\nLocation: {res[0][5]}\nDate: {res[0][7]}\n\nRicordati di chiedere tutte le informazioni che ritieni necessarie al venditore (tipologia di spedizione, consegna a mano, foto del libro etc.)\n\nInfo sul venditore:\nNome: {seller.first_name}\nCognome: {seller.last_name}\nUsername: {seller.username}\nID: {seller.id}\nTEST_LINK: https://t.me/{seller.username} "
             
+            button_seller = Button.url('Contatta il compratore', url=f"https://t.me/{buyer.username}")
+            button_buyer = Button.url('Contatta il venditore', url=f"https://t.me/{seller.username}")
+            
+            
+            
+            
+            message_to_seller = await client.send_message(int(seller_id), book_info_seller, buttons=[button_seller])
+            await client.pin_message(int(seller_id), message_to_seller, notify=True)
+            message_to_buyer = await client.send_message(int(buyer_id), book_info_buyer, buttons=[button_buyer])
+            await client.pin_message(int(buyer_id), message_to_buyer, notify=True)
 
-            message = await client.send_message(int(seller_id), book_info_seller)
-            await client.pin_message(int(seller_id), message, notify=True)
-            message2 = await client.send_message(int(buyer_id), book_info_buyer)
-            await client.pin_message(int(buyer_id), message2, notify=True)
+
+            
 
     except Exception as e:
         print(e)
