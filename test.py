@@ -1,13 +1,7 @@
 import configparser    #this will be needed on final release to parse the id hash and token from a config.ini file
-import telegram 
 from telethon import TelegramClient, events, Button
 import sqlite3
 from datetime import datetime
-from telethon.tl.types import InputPeerUser
-from telethon.tl import functions, types
-from telethon.sync import TelegramClient, events, functions, types
-from telethon.tl.functions.users import GetFullUserRequest
-
 
 
 print("Initializing configurations...")
@@ -21,9 +15,13 @@ session_name = "/home/filippoferrari/Documents/book_test/sessions/Bot"
 # Start the bot session
 client = TelegramClient(session_name, API_ID, API_HASH).start(bot_token=BOT_TOKEN)
 
+######
+###### START COMMAND
+######
 
 @client.on(events.NewMessage(pattern="(?i)/start"))
 async def start(event):
+    # Get the sender of the message
     sender = await event.get_sender()
     SENDER = sender.id
     text = "Benvenuto nel bot di compravendita di libri usati\nPer aggiungere un libro in vendita utilizza il comando /insert seguito da NOME, AUTORE, PREZZO, STATO, CITTA'.\nESEMPIO: /instert la Bibbia, Gesu' Cristo, 15.99 euro, come nuovo, Gerusalemme"
@@ -55,7 +53,7 @@ async def insert(event):
         # Get the book details by splitting the remaining message using commas as the separator
         book_parts = command_parts[1].split(",")
         if len(book_parts) != 5:
-            raise ValueError("Invalid book details format")
+            raise ValueError("Formato del libro non valido, riprova: (/instert TITOLO, AUTORE, PREZZO, STATO, CITTA')")
         book_name = book_parts[0].strip()
         book_author = book_parts[1].strip()
         book_price = book_parts[2].strip()
@@ -72,10 +70,10 @@ async def insert(event):
 
         # If at least 1 row is affected by the query we send specific messages
         if crsr.rowcount < 1:
-            text = "Something went wrong, please try again"
+            text = "Qualcosa e' andato storto, perfavore riprova"
             await client.send_message(SENDER, text, parse_mode='html')
         else:
-            text = "Book correctly inserted"
+            text = "Libro inserito correttamente"
             await client.send_message(SENDER, text, parse_mode='html')
 
 
@@ -89,7 +87,7 @@ async def insert(event):
 ###### SHOWMYBOOKS COMMAND
 ######
 
-# Function that creates a message the contains a list of all the books
+# Function that creates a message that contains a list of books
 def create_message_select_query(ans):
     text = ""
     for i in ans:
@@ -124,7 +122,7 @@ async def select(event):
             await client.send_message(SENDER, testo_messaggio, parse_mode='html')
         # Otherwhise, print a default text
         else:
-            text = "No orders found inside the database."
+            text = "Non hai libri in vendita al momento."
             await client.send_message(event.chat_id, testo_messaggio, parse_mode='html')
 
     except Exception as e:
@@ -168,7 +166,11 @@ async def delete(event):
         print(e)
         await client.send_message(SENDER, "<b>Conversation Terminated✔️</b>", parse_mode='html')
         return
-    
+
+
+######
+###### SEARCH BY NAME COMMAND
+######
 
 #create a function that searches a book by name
 def search_book_by_name(book_name):
@@ -177,10 +179,6 @@ def search_book_by_name(book_name):
     rows = crsr.fetchall
     return rows
 
-
-######
-###### SEARCH BY NAME COMMAND
-######
 
 @client.on(events.NewMessage(pattern="^/searchbyname"))
 async def search_by_name(event):
@@ -202,11 +200,11 @@ async def search_by_name(event):
 
         # If no result is found, we send a message to inform the user
         if not result:
-            text = "No book found with the name '{}'. Please try again with a different name.".format(book_name)
+            text = "Nessun libro trovato dal titolo '{}'.".format(book_name)
             await client.send_message(SENDER, text, parse_mode='html')
         else:
             # Build the message to send to the user with all the books information
-            text = "Books found with the name '{}':\n".format(book_name)
+            text = "Libri dal titolo '{}' trovati:\n".format(book_name)
             for row in result:
                 text += "BOOK ID: {}\nName: {}\nAuthor: {}\nPrice: {}\nStatus: {}\nLocation: {}\nDate of upload: {}\n\n".format(row[0],row[1], row[2], row[3], row[4], row[5], row[7])
 
@@ -241,11 +239,11 @@ async def search_by_name(event):
 
         # If no result is found, we send a message to inform the user
         if not result:
-            text = "No book found with the name '{}'. Please try again with a different name.".format(book_author)
+            text = "Nessun libro trovato dell'autore '{}'.".format(book_author)
             await client.send_message(SENDER, text, parse_mode='html')
         else:
             # Build the message to send to the user with all the books information
-            text = "Books found with the name '{}':\n".format(book_author)
+            text = "Libri dell'autore '{}' trovati:\n".format(book_author)
             for row in result:
                 text += "BOOK ID: {}\nName: {}\nAuthor: {}\nPrice: {}\nStatus: {}\nLocation: {}\nDate of upload: {}\n\n".format(row[0],row[1], row[2], row[3], row[4], row[5], row[7])
 
@@ -277,15 +275,15 @@ async def select(event):
         res = crsr.fetchall()
         
         if not res:
-            text = "No books found with that ID, check again please.\nYou need the BOOK ID value (example: /buythisbook *BOOK ID*)"
+            text = "Nessun libro presente con questo ID, ricontrolla perfavore.\nUsa l'ID del libro (esempio: /buythisbook *BOOK ID*)"
             await client.send_message(buyer_id, text, parse_mode='html')
             return
         
 
         else:
             seller_id = res[0][6]
-            print('FETCH SUCCESSFUL, BOOK RETRIEVED') #testing only
-            print(seller_id) #testing only
+            print('FETCH SUCCESSFUL, BOOK RETRIEVED') #testing only remove afterwards
+            print("Interest in a book has been shown by user", buyer_id, "to a book from user", seller_id)
             # fetch user objects for buyer and seller
             buyer = await client.get_entity(int(buyer_id))
             seller = await client.get_entity(int(seller_id))
@@ -312,23 +310,6 @@ async def select(event):
         return
 
 
-###
-### TEST COMMAND, for test only, remove afterwards
-### 
-
-
-@client.on(events.NewMessage(pattern="(?i)/test"))
-async def test(event):
-    try:
-        sender = await event.get_sender()
-        user_id = sender.id
-        message = await client.send_message(user_id, 'TEST')
-        await client.pin_message(user_id, message, notify=True)
-    except Exception as e:
-        print(e)
-
-
-
 
 ########################################################################################################
 ##### MAIN
@@ -336,7 +317,7 @@ if __name__ == '__main__':
     try:
         print("Initializing Database...")
         # Connect to local database
-        db_name = '/home/filippoferrari/Documents/book_test/test-database.db' # Insert the database name. Database is the folder
+        db_name = '/home/filippoferrari/Documents/book_test/test-database.db' # Insert the database name.
         conn = sqlite3.connect(db_name, check_same_thread=False)
         # Create the cursor
         # The cursor is an instance using which you can invoke methods that execute SQLite statements, fetch data from the result sets of the queries.
