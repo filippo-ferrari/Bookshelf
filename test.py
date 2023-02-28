@@ -2,15 +2,10 @@ import configparser    #this will be needed on final release to parse the id has
 from telethon import TelegramClient, events, Button
 import sqlite3
 from datetime import datetime
+from config import API_ID, API_HASH, BOT_TOKEN, session_name
 
 
 print("Initializing configurations...")
-
-API_ID = "26464259"
-API_HASH = "715c925fbcea1e1d8c34d99447ee1689"
-BOT_TOKEN = "6260769580:AAHR8JWrQzBawUi_qMSKyhAAjvRfrGDu-OQ"
-session_name = "/home/filippoferrari/Documents/book_test/sessions/Bot"
-
 
 # Start the bot session
 client = TelegramClient(session_name, API_ID, API_HASH).start(bot_token=BOT_TOKEN)
