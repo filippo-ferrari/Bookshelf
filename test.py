@@ -99,8 +99,8 @@ def create_message_select_query(ans):
         book_location = i[5]
         sender = i[6]
         creation_date = i[7]
-        text += "<b>" + str(id) +"</b> | " + "<b>"+ str(book_name) +"</b> | " + "<b>"+ str(book_author) +"</b> | " + "<b>"+ str(book_price)+"</b> | " + "<b>"+ str(book_status)+"</b> |  " + "<b>"+ str(book_location)+"</b> | " + "<b>"+ str(sender)+"</b> | " + "<b>"+ str(creation_date)+"</b>\n"
-    message = "<b>Received 📖 </b> Information about orders:\n\n"+text
+        text += "<b>" + str(id) +"</b> | " + "<b>"+ str(book_name) +"</b> | " + "<b>"+ str(book_author) +"</b> | " + "<b>"+ str(book_price)+"</b> | " + "<b>"+ str(book_status)+"</b> |  " + "<b>"+ str(book_location)+"</b> | " + "<b>"+ str(creation_date)+"</b>\n\n"
+    message = "<b>📖 I tuoi libri in vendita: 📖 </b>\n\n"+text
     return message
 
 
@@ -135,9 +135,6 @@ async def select(event):
 ###### DELETE COMMAND
 ######
 
-## /delete x     where "x" is the id of the book, no other values needed
-## BUGTESTING STILL REQUIRED FOR FIELD INPUT ##
-
 @client.on(events.NewMessage(pattern="(?i)/delete"))
 async def delete(event):
     try:
@@ -150,16 +147,16 @@ async def delete(event):
         id = list_of_words[1] # The second (1) element is the id
 
         # Crete the DELETE query passing the is as a parameter
-        sql_command = "DELETE FROM orders WHERE id = (?);"
-        ans = crsr.execute(sql_command, (id,))
+        sql_command = "DELETE FROM orders WHERE id = (?) AND SENDER = (?);"
+        ans = crsr.execute(sql_command, (id, SENDER,))
         conn.commit()
         
         # If at least 1 row is affected by the query we send a specific message
         if ans.rowcount < 1:
-            text = "Order with id {} is not present".format(id)
+            text = "Impossibile cancellare il libro con l'ID {}, in quanto non esiste o non ti appartiene".format(id)
             await client.send_message(SENDER, text, parse_mode='html')
         else:
-            text = "Order with id {} correctly deleted".format(id)
+            text = "Il tuo libro con ID {} e' stato cancellato".format(id)
             await client.send_message(SENDER, text, parse_mode='html')
 
     except Exception as e: 
@@ -287,22 +284,16 @@ async def select(event):
             # fetch user objects for buyer and seller
             buyer = await client.get_entity(int(buyer_id))
             seller = await client.get_entity(int(seller_id))
-            book_info_seller = f"Un utente e interessato ad un tuo libro.\n\nID del libro: {res[0][0]}\nBook Title: {res[0][1]}\nAuthor: {res[0][2]}\nPrice: {res[0][3]}\nStatus: {res[0][4]}\nLocation: {res[0][5]}\nDate: {res[0][7]}\n\nContatta l'utente:\nNome: {buyer.first_name}\nCognome: {buyer.last_name}\nUsername: {buyer.username}\nID: {buyer.id}\nTEST_LINK: https://t.me/{buyer.username} "    #LINK: https://t.me/{buyer.username}
-            book_info_buyer = f"Abbiamo notificato il venditore del tuo interesse per un suo libro.\nDi seguito trovi i dati del libro\n\nBook Title: {res[0][1]}\nAuthor: {res[0][2]}\nPrice: {res[0][3]}\nStatus: {res[0][4]}\nLocation: {res[0][5]}\nDate: {res[0][7]}\n\nRicordati di chiedere tutte le informazioni che ritieni necessarie al venditore (tipologia di spedizione, consegna a mano, foto del libro etc.)\n\nInfo sul venditore:\nNome: {seller.first_name}\nCognome: {seller.last_name}\nUsername: {seller.username}\nID: {seller.id}\nTEST_LINK: https://t.me/{seller.username} "
+            book_info_seller = f"Un utente e interessato ad un tuo libro.\n\nID del libro: {res[0][0]}\nBook Title: {res[0][1]}\nAuthor: {res[0][2]}\nPrice: {res[0][3]}\nStatus: {res[0][4]}\nLocation: {res[0][5]}\nDate: {res[0][7]}\n\nContatta l'utente:\nNome: {buyer.first_name}\nCognome: {buyer.last_name}\nUsername: {buyer.username}\n\n Ricorda di cancellare il libro una volta venduto (/delete *BOOK ID*)"    #LINK: https://t.me/{buyer.username}
+            book_info_buyer = f"Abbiamo notificato il venditore del tuo interesse per un suo libro.\nDi seguito trovi i dati del libro\n\nBook Title: {res[0][1]}\nAuthor: {res[0][2]}\nPrice: {res[0][3]}\nStatus: {res[0][4]}\nLocation: {res[0][5]}\nDate: {res[0][7]}\n\nRicordati di chiedere tutte le informazioni che ritieni necessarie al venditore (tipologia di spedizione, consegna a mano, foto del libro etc.)\n\nInfo sul venditore:\nNome: {seller.first_name}\nCognome: {seller.last_name}\nUsername: {seller.username}"
             
             button_seller = Button.url('Contatta il compratore', url=f"https://t.me/{buyer.username}")
             button_buyer = Button.url('Contatta il venditore', url=f"https://t.me/{seller.username}")
-            
-            
-            
             
             message_to_seller = await client.send_message(int(seller_id), book_info_seller, buttons=[button_seller])
             await client.pin_message(int(seller_id), message_to_seller, notify=True)
             message_to_buyer = await client.send_message(int(buyer_id), book_info_buyer, buttons=[button_buyer])
             await client.pin_message(int(buyer_id), message_to_buyer, notify=True)
-
-
-            
 
     except Exception as e:
         print(e)
@@ -310,9 +301,8 @@ async def select(event):
         return
 
 
-
 ########################################################################################################
-##### MAIN
+######################################################################################################## MAIN
 if __name__ == '__main__':
     try:
         print("Initializing Database...")
