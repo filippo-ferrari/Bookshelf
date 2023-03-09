@@ -1,4 +1,4 @@
-## Book Bot
+## Bookshelf
 
 This is Bookshelf, a telegram bot that connects buyers and sellers of used books, with a focus on university textbooks. The bot utilizes Telegram's chat functionalities to simplify communication and increase the potential user base.
 
